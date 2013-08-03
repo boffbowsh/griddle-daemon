@@ -12,6 +12,12 @@ var util     = require("util"),
 var app = express();
 app.use(express.bodyParser());
 
+var runningProcesses = {};
+
+app.get("/processes", function(req, res) {
+  res.json(provider.listProcesses());
+});
+
 app.get("/apps", function(req, res) {
   redis.smembers("griddle:apps", function(err, apps) {
     var appList = {};
@@ -24,6 +30,10 @@ app.get("/apps", function(req, res) {
       res.json(appList).end();
     });
   });
+});
+
+app.get("/apps/:name/processes", function(req, res) {
+  res.json(provider.listProcesses(req.params.name));
 });
 
 app.put("/apps/:name", function(req, res) {
@@ -66,7 +76,7 @@ app.put("/apps/:name/slug", function(req, res) {
 app.post("/apps/:name/:processType/processes", function(req, res) {
   redis.get("griddle:apps:"+req.params.name+":slug", function(err, slugId) {
     redis.hgetall("griddle:apps:"+req.params.name+":env", function(err, env) {
-      provider.startProcess(slugId, req.params.processType, env, function(err, id) {
+      provider.startProcess(req.params.name, slugId, req.params.processType, env, function(err, id) {
         if (err) {
           res.json(500,{error: err}).end();
         } else {
