@@ -1,0 +1,7 @@
+{
+  "anvilHost": "globaldev-anvil-build.herokuapp.com" ,
+  "redis": {
+    "host": "localhost",
+    "port": 6379
+  }
+}
