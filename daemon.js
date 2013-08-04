@@ -12,8 +12,6 @@ var util     = require("util"),
 var app = express();
 app.use(express.bodyParser());
 
-var runningProcesses = {};
-
 app.get("/processes", function(req, res) {
   res.json(provider.listProcesses());
 });
@@ -73,6 +71,24 @@ app.put("/apps/:name/slug", function(req, res) {
   });
 });
 
+app.put("/apps/:name/formation", function(req, res) {
+  var key = "griddle:apps:"+req.params.name+":formation";
+  redis.del(key, function() {
+    redis.hmset(key, req.body, function() {
+      res.status(204).end();
+    });
+  });
+});
+
+app.patch("/apps/:name/env", function(req, res) {
+  var key = "griddle:apps:"+req.params.name+":formation";
+  redis.hmset(key, req.body, function() {
+    redis.hgetall(key, function(err, env) {
+      res.json(env).end();
+    });
+  });
+});
+
 app.post("/apps/:name/:processType/processes", function(req, res) {
   redis.get("griddle:apps:"+req.params.name+":slug", function(err, slugId) {
     redis.hgetall("griddle:apps:"+req.params.name+":env", function(err, env) {
@@ -93,3 +109,20 @@ app.delete("/apps/:name/:processType/processes/:processId", function(req, res) {
 });
 
 app.listen(9090);
+
+// Start each app's formation
+redis.smembers("griddle:apps", function(err, apps) {
+  apps.forEach(function(app) {
+    redis.hgetall("griddle:apps:"+app+":formation", function(err, formation) {
+      redis.get("griddle:apps:"+app+":slug", function(err, slugId) {
+        redis.hgetall("griddle:apps:"+app+":env", function(err, env) {
+          Object.keys(formation).forEach(function(processType) {
+            for (var i = 0; i < parseInt(formation[processType], 10); i++) {
+              provider.startProcess(app, slugId, processType, env);
+            }
+          });
+        });
+      });
+    });
+  });
+});
