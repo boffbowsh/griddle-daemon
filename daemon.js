@@ -108,6 +108,10 @@ app.delete("/apps/:name/:processType/processes/:processId", function(req, res) {
   res.status(202).end();
 });
 
+app.get("/apps/:name/:processType/processes/:processId/logs", function(req, res) {
+  res.json(provider.logsFor(req.params.processId, req.query.count));
+});
+
 app.listen(9090);
 
 // Start each app's formation
