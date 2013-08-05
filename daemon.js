@@ -112,7 +112,7 @@ app.get("/apps/:name/:processType/processes/:processId/logs", function(req, res)
   res.json(provider.logsFor(req.params.processId, req.query.count));
 });
 
-app.listen(9090);
+app.listen(config.port);
 
 // Start each app's formation
 redis.smembers("griddle:apps", function(err, apps) {
