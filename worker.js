@@ -24,9 +24,11 @@ app.delete("/processes", function(req, res) {
 
 app.get("/apps", function(req, res) {
   redis.smembers("griddle:apps", function(err, apps) {
+    redisError(res, err);
     var appList = {};
     async.each(apps, function(app, done){
       redis.hgetall("griddle:apps:"+app+":env", function(err, env) {
+        redisError(res, err);
         appList[app] = env;
         done();
       });
@@ -41,7 +43,8 @@ app.get("/apps/:name/processes", function(req, res) {
 });
 
 app.put("/apps/:name", function(req, res) {
-  redis.sadd("griddle:apps", req.params.name, function() {
+  redis.sadd("griddle:apps", req.params.name, function(err) {
+    redisError(res, err);
     res.location("/apps/"+req.params.name).json(201, {name: req.params.name}).end();
   });
 });
@@ -49,14 +52,17 @@ app.put("/apps/:name", function(req, res) {
 app.get("/apps/:name/env", function(req, res) {
   var key = "griddle:apps:"+req.params.name+":env";
   redis.hgetall(key, function(err, env) {
+    redisError(res, err);
     res.json(env).end();
   });
 });
 
 app.put("/apps/:name/env", function(req, res) {
   var key = "griddle:apps:"+req.params.name+":env";
-  redis.del(key, function() {
-    redis.hmset(key, req.body, function() {
+  redis.del(key, function(err) {
+    redisError(res, err);
+    redis.hmset(key, req.body, function(err) {
+      redisError(res, err);
       res.status(204).end();
     });
   });
@@ -64,23 +70,28 @@ app.put("/apps/:name/env", function(req, res) {
 
 app.patch("/apps/:name/env", function(req, res) {
   var key = "griddle:apps:"+req.params.name+":env";
-  redis.hmset(key, req.body, function() {
+  redis.hmset(key, req.body, function(err) {
+    redisError(res, err);
     redis.hgetall(key, function(err, env) {
+      redisError(res, err);
       res.json(env).end();
     });
   });
 });
 
 app.put("/apps/:name/slug", function(req, res) {
-  redis.set("griddle:apps:"+req.params.name+":slug", req.body.slugId, function() {
+  redis.set("griddle:apps:"+req.params.name+":slug", req.body.slugId, function(err) {
+    redisError(res, err);
     res.status(204).end();
   });
 });
 
 app.put("/apps/:name/formation", function(req, res) {
   var key = "griddle:apps:"+req.params.name+":formation";
-  redis.del(key, function() {
-    redis.hmset(key, req.body, function() {
+  redis.del(key, function(err) {
+    redisError(res, err);
+    redis.hmset(key, req.body, function(err) {
+      redisError(res, err);
       res.status(204).end();
     });
   });
@@ -88,8 +99,10 @@ app.put("/apps/:name/formation", function(req, res) {
 
 app.patch("/apps/:name/env", function(req, res) {
   var key = "griddle:apps:"+req.params.name+":formation";
-  redis.hmset(key, req.body, function() {
+  redis.hmset(key, req.body, function(err) {
+    redisError(res, err);
     redis.hgetall(key, function(err, env) {
+      redisError(res, err);
       res.json(env).end();
     });
   });
@@ -97,7 +110,9 @@ app.patch("/apps/:name/env", function(req, res) {
 
 app.post("/apps/:name/:processType/processes", function(req, res) {
   redis.get("griddle:apps:"+req.params.name+":slug", function(err, slugId) {
+    redisError(res, err);
     redis.hgetall("griddle:apps:"+req.params.name+":env", function(err, env) {
+      redisError(res, err);
       provider.startProcess(req.params.name, slugId, req.params.processType, env, function(err, id) {
         if (err) {
           res.json(500,{error: err}).end();
@@ -149,4 +164,10 @@ function handleExit() {
   provider.killAll(function() {
     process.exit(0);
   });
+}
+
+function redisError(res, err) {
+  if (err) {
+    res.json(500, {redisError: err}).end();
+  }
 }
