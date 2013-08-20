@@ -5,6 +5,9 @@ A heroku-style containerised deployment system with pluggable container provider
 
 Tested on CentOS 5.9.
 
+- [Kanban](http://huboard.com/boffbowsh/griddle-daemon)
+- [Requirements](https://docs.google.com/a/globalpersonals.co.uk/document/d/1caV4Knrdb6-ioqgjdnotfk4WeorMoqkseDZHkqugLlA/edit#heading=h.7kg88fazut1n)
+
 Prerequisites
 -------------
 
