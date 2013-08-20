@@ -20,7 +20,7 @@ function on_exit()
     while process_alive && test $n -ge 0; do
       sleep 0.2 && n=$(( $n - 1 ))
     done
-   
+
     if process_alive; then
       echo "Didn't die within 10 seconds, killing"
     fi
@@ -50,7 +50,7 @@ mkdir -p $OVERLAY_DIR $MOUNT_DIR $OVERLAY_DIR/etc
 #  Fetch the slug if it doesn't exist
 if [[ ! -d $SLUG_DIR ]]; then
   mkdir -p $SLUG_DIR/app
-  curl -s http://$SLUG_HOST/slugs/$SLUG_ID.tgz | tar -xzC $SLUG_DIR/app 
+  curl -s http://$SLUG_HOST/slugs/$SLUG_ID.tgz | tar -xzC $SLUG_DIR/app
 fi
 
 # Bootstrap networking from the host
@@ -60,7 +60,7 @@ cp -fLu /etc/resolv.conf $OVERLAY_DIR/etc/
 # Mount everything using unionfs. Top-most layer is first. copy-on-write is used to
 # let us change anything in the system but only have those changes stored in the overlay
 #
-# /root/lucid64 is the tarball located at https://s3.amazonaws.com/globaldev_anvil/lucid64.tgz
+# /root/lucid64 is the tarball located at http://d1ame58wcmmrml.cloudfront.net/lucid64.tgz
 # Install unionfs: http://grangerx.wordpress.com/2010/12/31/using-fuse-unionfs-with-centos-5-5-i686/
 unionfs -oallow_root -ouid=0 -ogid=0 -ocow $OVERLAY_DIR=RW:$SLUG_DIR=RO:$BASE_DIR=RO $MOUNT_DIR
 
