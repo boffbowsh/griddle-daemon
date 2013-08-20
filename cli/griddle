@@ -1,0 +1,199 @@
+#!/usr/bin/env node
+
+"use strict";
+
+var parser = require("nomnom"),
+    http   = require("http"),
+    url    = require("url");
+
+parser.script("griddle")
+  .options({
+    target: {
+      help: "API endpoint",
+      default: "http://0.0.0.0:9090"
+    }
+  });
+
+parser.command("apps")
+  .help("List the apps")
+  .callback(function(opts) {
+    cmdOpts = opts;
+    apiRequest("get", "/apps", null, function(err, data) {
+      formatResponse(data);
+    });
+  });
+
+parser.command("create")
+  .help("Create an app")
+  .option("name", {
+    position: 1
+  })
+  .callback(function(opts) {
+    cmdOpts = opts;
+    apiRequest("put", "/apps/"+parameterize(opts.name), null, function(err) {
+      if (err) {
+        console.log("Error:", err);
+      } else {
+        console.log("Ok");
+      }
+    });
+  });
+
+parser.command("release")
+  .help("Release a slug for all instances of an app")
+  .option("app", {
+    position: 1
+  })
+  .option("slug", {
+    position: 2
+  })
+  .callback(function(opts) {
+    cmdOpts = opts;
+    apiRequest("put", "/apps/"+opts.app+"/slug", {slugId: opts.slug}, function(err) {
+      if (err) {
+        console.log("Error:", err);
+      } else {
+        console.log("Ok");
+      }
+    });
+  });
+
+parser.command("env")
+  .help("Set ENV for an app")
+  .option("app", {
+    position: 1
+  })
+  .option("env", {
+    position: 2,
+    list: true
+  })
+  .callback(function(opts) {
+    cmdOpts = opts;
+    var envs = {}
+    opts.env.forEach(function(env) {
+      env = env.split("=");
+      envs[env[0]] = env[1];
+    });
+    apiRequest("put", "/apps/"+opts.app+"/env", envs, function(err) {
+      if (err) {
+        console.log("Error:", err);
+      } else {
+        console.log("Ok");
+      }
+    });
+  });
+
+parser.command("ps:start")
+  .help("Start a process for an app")
+  .option("app", {
+    position: 1
+  })
+  .option("type", {
+    position: 2
+  })
+  .callback(function(opts) {
+    cmdOpts = opts;
+    apiRequest("post", "/apps/"+opts.app+"/processes/"+opts.type, null, function(err) {
+      if (err) {
+        console.log("Error:", err);
+      } else {
+        console.log("Ok");
+      }
+    });
+  });
+
+parser.command("ps:stop")
+  .help("Stop a process for an app")
+  .option("app", {
+    position: 1
+  })
+  .option("type", {
+    position: 2
+  })
+  .callback(function(opts) {
+    cmdOpts = opts;
+    apiRequest("delete", "/apps/"+opts.app+"/processes/"+opts.type, null, function(err) {
+      if (err) {
+        console.log("Error:", err);
+      } else {
+        console.log("Ok");
+      }
+    });
+  });
+var cmdOpts = parser.parse();
+
+function apiRequest(method, path, data, callback) {
+  var requestOptions = url.parse(cmdOpts.target.replace(/\/*$/,"") + path);
+  requestOptions.method = method;
+  requestOptions.headers = {};
+  if (data) {
+    requestOptions.headers["Content-Type"] = "application/json";
+    data = JSON.stringify(data);
+  }
+  var req = http.request(requestOptions, function(res) {
+    var buffer;
+    res.on("data", function(data) {
+      if ( data === undefined ) return;
+      if ( buffer === undefined ) {
+        buffer = data;
+      } else {
+        buffer += data;
+      }
+    });
+    res.on("end", function(data) {
+      if ( data !== undefined ) {
+        buffer += data;
+      }
+      var json = buffer ? buffer.toString() : "null";
+      callback(null, JSON.parse(json));
+    });
+  });
+
+  if (data) {
+    req.write(data);
+  }
+  req.end();
+}
+
+function formatResponse(data) {
+  var Table = process.stdout.isTTY ? require("cli-table") : MachineTable,
+      opts, rows;
+  if (Array.isArray(data)) {
+    opts = {head: Object.keys(data[0])};
+    rows = data.map(function(row) {
+      var r = [];
+      Object.keys(data[0]).forEach(function(field) {
+        var value = row[field];
+        if (value && value.toString() === value) {
+          r.push(value);
+        } else {
+          r.push(JSON.stringify(value));
+        }
+      });
+      return r;
+    });
+  }
+  var table = new Table(opts);
+  table.push.apply(table, rows);
+  console.log(table.toString());
+}
+
+function MachineTable(opts) {
+  this.headers = opts.head;
+  this.rows = [];
+}
+
+MachineTable.prototype.toString = function() {
+  return this.headers.join("\t") + "\n" +
+    this.rows.map(function(row) {
+      return row.join("\t").replace("\n", "");
+    }).join("\n");
+};
+
+MachineTable.prototype.push = function() {
+  this.rows.push.apply(this.rows, arguments);
+};
+
+function parameterize(param) {
+  return param.toLowerCase().replace(/\W+/,"_");
+}

@@ -1,0 +1,16 @@
+{
+  "name": "griddle-cli",
+  "version": "0.1.0",
+  "description": "CLI interface to griddle",
+  "main": "griddle",
+  "scripts": {
+    "test": ""
+  },
+  "private": true,
+  "author": "",
+  "license": "BSD",
+  "dependencies": {
+    "nomnom": "~1.6.1",
+    "cli-table": "~0.2.0"
+  }
+}

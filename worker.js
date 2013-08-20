@@ -5,7 +5,6 @@
 var util     = require("util"),
     express  = require("express"),
     provider = require("./lib/providers/chroot"),
-    async    = require("async"),
     config   = require("./config.json"),
     redis    = require("redis").createClient(config.redis.port, config.redis.host);
 
@@ -25,23 +24,7 @@ app.delete("/processes", function(req, res) {
 app.get("/apps", function(req, res) {
   redis.smembers("griddle:apps", function(err, apps) {
     redisError(res, err);
-    async.map(apps, function(app, cb){
-      redis.get("griddle:apps:"+app+":slug", function(err, slugId) {
-        redisError(res, err);
-        redis.hgetall("griddle:apps:"+app+":env", function(err, env) {
-          redisError(res, err);
-          if (slugId) {
-            provider.processTypes(slugId, function(processTypes) {
-              cb(null, {name: app, env: env, slugId: slugId, processes: provider.listProcesses(app), processTypes: processTypes});
-            });
-          } else {
-            cb(null, {name: app, env: env, slugId: slugId, processes: provider.listProcesses(app), processTypes: []});
-          }
-        });
-      });
-    }, function(err, appList){
-      res.json(appList).end();
-    });
+    res.json(apps.map(function(name) { return {name: name}; })).end();
   });
 });
 
@@ -104,13 +87,13 @@ app.put("/apps/:name/formation", function(req, res) {
   });
 });
 
-app.patch("/apps/:name/env", function(req, res) {
+app.patch("/apps/:name/formation", function(req, res) {
   var key = "griddle:apps:"+req.params.name+":formation";
   redis.hmset(key, req.body, function(err) {
     redisError(res, err);
-    redis.hgetall(key, function(err, env) {
+    redis.hgetall(key, function(err, formation) {
       redisError(res, err);
-      res.json(env).end();
+      res.json(formation).end();
     });
   });
 });
