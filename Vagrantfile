@@ -18,6 +18,24 @@ Vagrant.configure("2") do |config|
     vm.customize ["modifyvm", :id, "--cpus", 2]
   end
 
+  # This is provisioned via sudo, which requires a TTY else it'll fail.
+  # In order to use this, first bring up the EC2 instance, wait for it to fail
+  # then do vagrant ssh, then visudo and comment out the requiretty line. Then,
+  # vagrant provision should work correctly.
+
+  config.vm.provider "aws" do |aws, override|
+    aws.access_key_id = ENV["AWS_KEY"]
+    aws.secret_access_key = ENV["AWS_SECRET"]
+    aws.keypair_name = ENV["AWS_KEYPAIR"]
+    aws.instance_type = "t1.micro"
+    aws.region = "eu-west-1"
+
+    aws.ami = "ami-f13a2b85"
+
+    override.ssh.username = "root"
+    override.ssh.private_key_path = "/Users/pbowsher/.ssh/GP-EC2.pem"
+  end
+
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine. In the example below,
   # accessing "localhost:8080" will access port 80 on the guest machine.
