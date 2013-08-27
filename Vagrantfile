@@ -30,7 +30,7 @@ Vagrant.configure("2") do |config|
     aws.instance_type = "t1.micro"
     aws.region = "eu-west-1"
 
-    aws.ami = "ami-f13a2b85"
+    aws.ami = "ami-2b3e2f5f"
 
     override.ssh.username = "root"
     override.ssh.private_key_path = "/Users/pbowsher/.ssh/GP-EC2.pem"
@@ -59,7 +59,7 @@ Vagrant.configure("2") do |config|
   # config.vm.synced_folder "../data", "/vagrant_data"
 
   script = <<SCRIPT
-rpm -Uhv http://apt.sw.be/redhat/el5/en/x86_64/rpmforge/RPMS//rpmforge-release-0.3.6-1.el5.rf.x86_64.rpm
+rpm -Uhv http://apt.sw.be/redhat/el5/en/x86_64/rpmforge/RPMS/rpmforge-release-0.3.6-1.el5.rf.x86_64.rpm
 rpm -Uhv http://centos.alt.ru/repository/centos/5/i386/centalt-release-5-3.noarch.rpm
 rpm -Uhv http://dl.fedoraproject.org/pub/epel/5/x86_64/epel-release-5-4.noarch.rpm
 rpm -Uvh http://d1ame58wcmmrml.cloudfront.net/nodejs-0.10.16-1.x86_64.rpm
