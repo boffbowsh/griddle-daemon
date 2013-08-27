@@ -6,10 +6,14 @@ var util     = require("util"),
     express  = require("express"),
     provider = require("./lib/providers/chroot"),
     config   = require("./config.json"),
+    routes   = require("./lib/routes"),
     redis    = require("redis").createClient(config.redis.port, config.redis.host);
 
+var models = require("./lib/models")(redis);
 var app = express();
 app.use(express.bodyParser());
+
+routes(app, models);
 
 app.get("/processes", function(req, res) {
   res.json(provider.listProcesses());
@@ -18,13 +22,6 @@ app.get("/processes", function(req, res) {
 app.delete("/processes", function(req, res) {
   provider.killAll(function() {
     res.status(202).end();
-  });
-});
-
-app.get("/apps", function(req, res) {
-  redis.smembers("griddle:apps", function(err, apps) {
-    redisError(res, err);
-    res.json(apps.map(function(name) { return {name: name}; })).end();
   });
 });
 
@@ -175,3 +172,5 @@ function redisError(res, err) {
     res.json(500, {redisError: err}).end();
   }
 }
+
+module.exports = {app: app};
