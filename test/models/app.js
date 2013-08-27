@@ -1,3 +1,5 @@
+"use strict";
+
 var should  = require("chai").should(),
     redis   = require("redis").createClient();
 
@@ -5,7 +7,7 @@ var App = require("../../lib/models")(redis).App;
 
 before(function(done) {
   redis.select(10, function(){
-    redis.flushdb(done)
+    redis.flushdb(done);
   });
 });
 
@@ -33,7 +35,7 @@ describe("App", function() {
         });
       });
       it("yields a null error", function(done) {
-        App.find("boofar", function(err, app) {
+        App.find("boofar", function(err) {
           should.not.exist(err);
           done();
         });
@@ -42,8 +44,8 @@ describe("App", function() {
 
     describe("for a non-existant app", function() {
       it("yields a NotFound error", function(done) {
-        App.find("foobar", function(err, app) {
-          err.should.equal("Not Found")
+        App.find("foobar", function(err) {
+          err.should.equal("Not Found");
           done();
         });
       });
@@ -52,6 +54,28 @@ describe("App", function() {
           should.not.exist(app);
           done();
         });
+      });
+    });
+  });
+
+  describe(".all", function() {
+    beforeEach(function(done) {
+      redis.sadd("griddle:apps", "foobar", "bazqux", done);
+    });
+
+    it("yields 2 apps", function(done) {
+      App.all(function(err, apps) {
+        apps.should.to.have.length(2);
+        done();
+      });
+    });
+
+    it("populates the apps", function(done) {
+      App.all(function(err, apps) {
+        apps.map(function(app) {
+          return app.name;
+        }).should.include.members(["bazqux", "foobar"]);
+        done();
       });
     });
   });
