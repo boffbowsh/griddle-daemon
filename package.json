@@ -4,9 +4,11 @@
   "description": "Griddle's Container control daemon",
   "main": "daemon.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jshint lib test cli *.js && mocha --recursive"
   },
-  "author": "",
+  "repository": "git@github.com:globaldev/griddle-daemon.git",
+  "private": true,
+  "author": "Paul Bowsher <pbowsher@globalpersonals.co.uk>",
   "license": "BSD",
   "dependencies": {
     "express": "~3.3.4",
