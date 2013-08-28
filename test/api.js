@@ -21,7 +21,7 @@ describe("GET /apps", function() {
     it("returns a list", function(done) {
       request(api)
         .get("/apps")
-        .expect("Content-Type", "application/json")
+        .expect("Content-Type", /json/)
         .expect(200, [{name: "foobar"}], done);
     });
   });
@@ -34,7 +34,7 @@ describe("GET /apps", function() {
     it("returns a list", function(done) {
       request(api)
         .get("/apps")
-        .expect("Content-Type", "application/json")
+        .expect("Content-Type", /json/)
         .expect(200, [{name: "foobar"}, {name: "bazfoo"}], done);
     });
   });
@@ -47,7 +47,7 @@ describe("GET /apps", function() {
     it("returns an empty", function(done) {
       request(api)
         .get("/apps")
-        .expect("Content-Type", "application/json")
+        .expect("Content-Type", /json/)
         .expect(200, [], done);
     });
   });
