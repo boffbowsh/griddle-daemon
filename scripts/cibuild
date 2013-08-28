@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+PATH=$HOME/nodes/0.10/bin:$PATH
+WLD_ENV=test
+
+make
+npm install --python=python26
+npm test
