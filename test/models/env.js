@@ -23,7 +23,7 @@ describe("Env", function() {
   });
 
   describe("properties", function() {
-    describe("#appName", function() {
+    describe("#_appName", function() {
       var env;
 
       beforeEach(function() {
@@ -31,15 +31,15 @@ describe("Env", function() {
       });
 
       it("contains the app name the App was instantiated with", function() {
-        env.appName.should.equal("hello_world");
+        env._appName.should.equal("hello_world");
       });
 
       it("is readonly", function() {
-        (function() {env.appName = "goodbye_world";}).should.throw(/read only/);
+        (function() {env._appName = "goodbye_world";}).should.throw(/read only/);
       });
 
       it("is not enumerable", function() {
-        Object.keys(env).should.not.include("appName");
+        Object.keys(env).should.not.include("_appName");
       });
     });
   });
