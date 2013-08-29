@@ -62,7 +62,7 @@ describe("PUT /apps/:name", function(){
     app = sinon.spy();
     App.returns(app);
     app.save = sinon.spy();
-  })
+  });
 
   it("rejects an app name containing a space", function(done) {
     request(api)
@@ -89,7 +89,7 @@ describe("PUT /apps/:name", function(){
     request(api)
       .put("/apps/hello-world")
       .expect(201, function(err) {
-        app.save.calledOnce.should.be.true;
+        app.save.calledOnce.should.equal(true);
         done();
       });
   });
