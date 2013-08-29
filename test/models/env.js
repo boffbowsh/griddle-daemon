@@ -22,7 +22,7 @@ describe("Env", function() {
     env = new Env("hello_world");
   });
 
-  describe("properties", function() {
+  describe("property", function() {
     var env;
 
     beforeEach(function() {
@@ -30,7 +30,7 @@ describe("Env", function() {
     });
 
     describe("#_appName", function() {
-      it("contains the app name the App was instantiated with", function() {
+      it("contains the app name the Env was instantiated with", function() {
         env._appName.should.equal("hello_world");
       });
 

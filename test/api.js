@@ -47,7 +47,7 @@ describe("GET /apps", function() {
       App.all = sinon.stub().yields(null, []);
     });
 
-    it("returns an empty", function(done) {
+    it("returns an empty list", function(done) {
       request(api)
         .get("/apps")
         .expect("Content-Type", /json/)
