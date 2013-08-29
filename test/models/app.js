@@ -16,7 +16,7 @@ afterEach(function(done) {
 });
 
 describe("App", function() {
-  describe(".all", function() {
+  describe(".all()", function() {
     beforeEach(function(done) {
       redis.sadd("griddle:apps", "foobar", "bazqux", done);
     });
@@ -34,6 +34,34 @@ describe("App", function() {
           return app.name;
         }).should.include.members(["bazqux", "foobar"]);
         done();
+      });
+    });
+  });
+
+  describe("#save()", function() {
+    it("adds the app name to the set", function(done) {
+      var app = new App("weeee");
+      app.save(function(err) {
+        should.not.exist(err);
+        redis.sismember("griddle:apps", "weeee", function(err, result) {
+          result.should.equal(1);
+          done();
+        });
+      });
+    });
+  });
+
+
+  describe("properties", function() {
+    describe("#name", function() {
+      it("contains the name the App was instantiated with", function() {
+        var app = new App("weeee");
+        app.name.should.equal("weeee");
+      });
+
+      it("is readonly", function() {
+        var app = new App("weeee");
+        (function() {app.name = "woooo";}).should.throw(/read ?only/);
       });
     });
   });

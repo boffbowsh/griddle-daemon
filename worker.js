@@ -29,13 +29,6 @@ app.get("/apps/:name/processes", function(req, res) {
   res.json(provider.listProcesses(req.params.name));
 });
 
-app.put("/apps/:name", function(req, res) {
-  redis.sadd("griddle:apps", req.params.name, function(err) {
-    redisError(res, err);
-    res.location("/apps/"+req.params.name).json(201, {name: req.params.name}).end();
-  });
-});
-
 app.get("/apps/:name/env", function(req, res) {
   var key = "griddle:apps:"+req.params.name+":env";
   redis.hgetall(key, function(err, env) {
