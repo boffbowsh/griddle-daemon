@@ -4,7 +4,7 @@
   "description": "Griddle's Container control daemon",
   "main": "daemon.js",
   "scripts": {
-    "test": "jshint lib test *.js && mocha --recursive"
+    "test": "jshint lib test *.js && mocha"
   },
   "repository": "git@github.com:globaldev/griddle-daemon.git",
   "private": true,
