@@ -6,12 +6,15 @@ var should  = require("chai").should(),
     sinon   = require("sinon"),
     rewire  = require("rewire");
 
-var api, App, models;
+var api, App, Env, models;
 
 beforeEach(function() {
   api = express();
+  api.use(express.bodyParser());
+
   App = sinon.stub();
-  models = {App: App};
+  Env = sinon.stub();
+  models = {App: App, Env: Env};
   require("../lib/routes")(api, models);
 });
 
@@ -92,5 +95,133 @@ describe("PUT /apps/:name", function(){
         app.save.calledOnce.should.equal(true);
         done();
       });
+  });
+});
+
+describe("/apps/:name/env", function() {
+  var env;
+  beforeEach(function() {
+    env = {load: sinon.stub().callsArg(0), save: sinon.stub().callsArg(0)};
+    Env.withArgs("hello-world").returns(env);
+  });
+
+  describe("GET", function() {
+    describe("with an empty env", function() {
+      it("returns an empty object", function(done) {
+        request(api)
+          .get("/apps/hello-world/env")
+          .expect(200, {}, done);
+      });
+    });
+
+    describe("with an env containing FOO", function() {
+      beforeEach(function() {
+        env.FOO = "bar";
+      });
+
+      it("returns an object containing FOO => \"bar\"", function(done) {
+        request(api)
+          .get("/apps/hello-world/env")
+          .expect(200, {FOO: "bar"}, done);
+      });
+    });
+  });
+
+  describe("PUT", function() {
+    describe("when given an Object", function() {
+      it("saves the object as the environment", function(done) {
+        request(api)
+          .put("/apps/hello-world/env")
+          .send({FOO: "bar"})
+          .end(function(err, res) {
+            env.FOO.should.equal("bar");
+            env.save.calledOnce.should.equal(true);
+            done();
+          });
+      });
+
+      it("doesn't load the existing environment first", function(done) {
+        request(api)
+          .put("/apps/hello-world/env")
+          .send({FOO: "bar"})
+          .end(function(err, res) {
+            env.load.called.should.equal(false);
+            done();
+          });
+      });
+    });
+
+    describe("when given an Array", function() {
+      it("rejects the input", function(done) {
+        request(api)
+          .put("/apps/hello-world/env")
+          .send(["foo"])
+          .expect(422, done);
+      });
+    });
+  });
+
+  describe("PATCH", function() {
+    describe("when given an Array", function() {
+      it("rejects the input", function(done) {
+        request(api)
+          .patch("/apps/hello-world/env")
+          .send(["foo"])
+          .expect(422, done);
+      });
+    });
+
+    describe("when given an Object", function() {
+      describe("with an empty existing environment", function() {
+        it("saves the object as the environment", function(done) {
+          request(api)
+            .patch("/apps/hello-world/env")
+            .send({FOO: "bar"})
+            .end(function(err, res) {
+              env.FOO.should.equal("bar");
+              env.save.calledOnce.should.equal(true);
+              done();
+            });
+        });
+      });
+
+      describe("with an existing environment", function() {
+        beforeEach(function() {
+          env.FOO = "baz";
+          env.MOO = "oink";
+        });
+
+        it("saves the object as the environment", function(done) {
+          request(api)
+            .patch("/apps/hello-world/env")
+            .send({FOO: "bar"})
+            .end(function(err, res) {
+              env.FOO.should.equal("bar");
+              env.save.calledOnce.should.equal(true);
+              done();
+            });
+        });
+
+        it("preserves the unchanged environment", function(done) {
+          request(api)
+            .patch("/apps/hello-world/env")
+            .send({FOO: "bar"})
+            .end(function(err, res) {
+              env.MOO.should.equal("oink");
+              done();
+            });
+        });
+
+        it("deletes variables if set to null", function(done) {
+          request(api)
+            .patch("/apps/hello-world/env")
+            .send({FOO: null})
+            .end(function(err, res) {
+              Object.keys(env).should.not.include("FOO");
+              done();
+            });
+        });
+      });
+    });
   });
 });
