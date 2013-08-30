@@ -62,6 +62,33 @@ describe("App", function() {
     });
   });
 
+  describe("#load()", function() {
+    var app;
+    beforeEach(function(done) {
+      app = new App("foobar");
+
+      redis.sadd("griddle:apps", "foobar", function() {
+        redis.set("griddle:apps:foobar:slug", "deadbeefcafe", done);
+      });
+    });
+
+    describe("when done", function() {
+      beforeEach(function(done) {
+        app.load(done);
+      });
+
+      describe("#slug", function() {
+        it("is populated", function() {
+          app.slug.should.equal("deadbeefcafe");
+        });
+
+        it("is writable", function() {
+          app.slug = "coffeebabe";
+          app.slug.should.equal("coffeebabe");
+        });
+      });
+    });
+  });
 
   describe("property", function() {
     describe("#name", function() {
