@@ -29,36 +29,6 @@ app.get("/apps/:name/processes", function(req, res) {
   res.json(provider.listProcesses(req.params.name));
 });
 
-app.get("/apps/:name/env", function(req, res) {
-  var key = "griddle:apps:"+req.params.name+":env";
-  redis.hgetall(key, function(err, env) {
-    redisError(res, err);
-    res.json(env).end();
-  });
-});
-
-app.put("/apps/:name/env", function(req, res) {
-  var key = "griddle:apps:"+req.params.name+":env";
-  redis.del(key, function(err) {
-    redisError(res, err);
-    redis.hmset(key, req.body, function(err) {
-      redisError(res, err);
-      res.status(204).end();
-    });
-  });
-});
-
-app.patch("/apps/:name/env", function(req, res) {
-  var key = "griddle:apps:"+req.params.name+":env";
-  redis.hmset(key, req.body, function(err) {
-    redisError(res, err);
-    redis.hgetall(key, function(err, env) {
-      redisError(res, err);
-      res.json(env).end();
-    });
-  });
-});
-
 app.put("/apps/:name/slug", function(req, res) {
   redis.set("griddle:apps:"+req.params.name+":slug", req.body.slugId, function(err) {
     redisError(res, err);
