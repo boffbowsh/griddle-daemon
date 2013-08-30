@@ -36,28 +36,6 @@ app.put("/apps/:name/slug", function(req, res) {
   });
 });
 
-app.put("/apps/:name/formation", function(req, res) {
-  var key = "griddle:apps:"+req.params.name+":formation";
-  redis.del(key, function(err) {
-    redisError(res, err);
-    redis.hmset(key, req.body, function(err) {
-      redisError(res, err);
-      res.status(204).end();
-    });
-  });
-});
-
-app.patch("/apps/:name/formation", function(req, res) {
-  var key = "griddle:apps:"+req.params.name+":formation";
-  redis.hmset(key, req.body, function(err) {
-    redisError(res, err);
-    redis.hgetall(key, function(err, formation) {
-      redisError(res, err);
-      res.json(formation).end();
-    });
-  });
-});
-
 app.get("/apps/:name/processes/:processType", function(req, res) {
   res.json(provider.listProcesses(req.params.name).filter(function(process) {
     return process.processType === req.params.processType;

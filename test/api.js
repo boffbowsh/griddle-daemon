@@ -6,7 +6,7 @@ var should  = require("chai").should(),
     sinon   = require("sinon"),
     rewire  = require("rewire");
 
-var api, App, Env, models;
+var api, App, Env, Formation, models;
 
 beforeEach(function() {
   api = express();
@@ -14,7 +14,8 @@ beforeEach(function() {
 
   App = sinon.stub();
   Env = sinon.stub();
-  models = {App: App, Env: Env};
+  Formation = sinon.stub();
+  models = {App: App, Env: Env, Formation: Formation};
   require("../lib/routes")(api, models);
 });
 
@@ -218,6 +219,154 @@ describe("/apps/:name/env", function() {
             .send({FOO: null})
             .end(function(err, res) {
               Object.keys(env).should.not.include("FOO");
+              done();
+            });
+        });
+      });
+    });
+  });
+});
+
+describe("/apps/:name/formation", function() {
+  var formation;
+  beforeEach(function() {
+    formation = {load: sinon.stub().callsArg(0), save: sinon.stub().callsArg(0)};
+    Formation.withArgs("hello-world").returns(formation);
+  });
+
+  describe("GET", function() {
+    describe("with an empty formation", function() {
+      it("returns an empty object", function(done) {
+        request(api)
+          .get("/apps/hello-world/formation")
+          .expect(200, {}, done);
+      });
+    });
+
+    describe("with an formation containing web", function() {
+      beforeEach(function() {
+        formation.web = 1;
+      });
+
+      it("returns an object containing web => \"bar\"", function(done) {
+        request(api)
+          .get("/apps/hello-world/formation")
+          .expect(200, {web: 1}, done);
+      });
+    });
+  });
+
+  describe("PUT", function() {
+    describe("when given an Object", function() {
+      describe("and the process count isn't an integer", function() {
+        it("rejects the input", function(done) {
+          request(api)
+            .put("/apps/hello-world/formation")
+            .send({web: "foo"})
+            .expect(422, done);
+        });
+
+        it("doesn't persist the input", function(done) {
+          request(api)
+            .put("/apps/hello-world/formation")
+            .send({web: "foo"})
+            .end(function(err, res) {
+              should.not.exist(formation.web);
+              formation.save.calledOnce.should.equal(false);
+              done();
+            });
+        });
+      });
+
+      it("saves the object as the formation", function(done) {
+        request(api)
+          .put("/apps/hello-world/formation")
+          .send({web: 1})
+          .end(function(err, res) {
+            formation.web.should.equal(1);
+            formation.save.calledOnce.should.equal(true);
+            done();
+          });
+      });
+
+      it("doesn't load the existing formation first", function(done) {
+        request(api)
+          .put("/apps/hello-world/formation")
+          .send({web: 1})
+          .end(function(err, res) {
+            formation.load.called.should.equal(false);
+            done();
+          });
+      });
+    });
+
+    describe("when given an Array", function() {
+      it("rejects the input", function(done) {
+        request(api)
+          .put("/apps/hello-world/formation")
+          .send(["foo"])
+          .expect(422, done);
+      });
+    });
+  });
+
+  describe("PATCH", function() {
+    describe("when given an Array", function() {
+      it("rejects the input", function(done) {
+        request(api)
+          .patch("/apps/hello-world/formation")
+          .send(["foo"])
+          .expect(422, done);
+      });
+    });
+
+    describe("when given an Object", function() {
+      describe("with an empty existing formation", function() {
+        it("saves the object as the formation", function(done) {
+          request(api)
+            .patch("/apps/hello-world/formation")
+            .send({web: 1})
+            .end(function(err, res) {
+              formation.web.should.equal(1);
+              formation.save.calledOnce.should.equal(true);
+              done();
+            });
+        });
+      });
+
+      describe("with an existing formation", function() {
+        beforeEach(function() {
+          formation.web = 2;
+          formation.worker = 1;
+        });
+
+        it("saves the object as the formation", function(done) {
+          request(api)
+            .patch("/apps/hello-world/formation")
+            .send({web: 1})
+            .end(function(err, res) {
+              formation.web.should.equal(1);
+              formation.save.calledOnce.should.equal(true);
+              done();
+            });
+        });
+
+        it("preserves the unchanged formation", function(done) {
+          request(api)
+            .patch("/apps/hello-world/formation")
+            .send({web: 3})
+            .end(function(err, res) {
+              formation.worker.should.equal(1);
+              done();
+            });
+        });
+
+        it("deletes variables if set to null", function(done) {
+          request(api)
+            .patch("/apps/hello-world/formation")
+            .send({web: null})
+            .end(function(err, res) {
+              Object.keys(formation).should.not.include("web");
               done();
             });
         });
