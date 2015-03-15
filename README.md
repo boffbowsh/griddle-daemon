@@ -1,7 +1,9 @@
 Griddle
 =======
 
-A heroku-style containerised deployment system with pluggable container providers.
+A heroku-style pre-Docker containerised deployment system with pluggable container providers.
+Don't use this. Use deis, flynn, Mesos+Marathon or any other number of PaaSes that have 
+appeared since this was made.
 
 Tested on CentOS 5.9.
 
